@@ -10,7 +10,6 @@ import gzip
 import json
 # progressbar
 # from docopt import docopt
-from itertools import zip_longest
 from elasticsearch import Elasticsearch
 
 es = Elasticsearch()
@@ -19,23 +18,40 @@ INDEX_NAME = "enwiki"
 
 def create_index():
 
-    def load_index_config(config):
-        with open(os.path.join(INDEX_NAME, "{}.json".format(config))) as fp:
-            return json.load(fp)
+    if not es.indices.exists(INDEX_NAME):
 
-    es.indices.create(
-        index=INDEX_NAME,
-        body={
-            "settings": load_index_config("settings"),
-            "mappings": load_index_config("mapping"),
-        },
-        ignore=400,
-    )
+        def load_index_config(config):
+            with open(os.path.join(INDEX_NAME, "{}.json".format(config))) as fp:
+                return json.load(fp)
+
+        es.indices.create(
+            index=INDEX_NAME,
+            body={
+                "settings": load_index_config("settings"),
+                "mappings": load_index_config("mapping"),
+            },
+        )
+
+    else:
+        print("index '{}' already exists".format(INDEX_NAME))
 
 
-def chunk_wikipedia(filepath):
+def chunk_gzipped_file(filepath, prefix):
     """
+    Split the gzipped file associated with the supplied filepath into
+    files of up to 500 lines each. The chunk files will consist of
+    uncompressed data and will be named with the format "prefix{:04d}"
+    and placed in a "chunks" directory.
 
+    Example:
+
+        Given gzipped file with 632 lines (when unzipped) and a prefix
+        of "foo", the following files will be created:
+
+        chunks/
+        ├── foo0001 (500 lines)
+        ├── foo0002 (500 lines)
+        └── foo0003 (132 lines)
     """
     chunk_dir = "chunks"
     line_chunksize = 500
@@ -48,7 +64,7 @@ def chunk_wikipedia(filepath):
         while True:
             num_line = 0
             with open(
-                os.path.join(chunk_dir, "{}{:04d}".format(INDEX_NAME, num_chunk)), "wb"
+                os.path.join(chunk_dir, "{}{:04d}".format(prefix, num_chunk)), "wb"
             ) as fp_chunk:
                 for line in fp:
                     if num_line < line_chunksize:
@@ -89,8 +105,27 @@ def get_categories_for_text(text):
     )
 
 
+def setup():
+    """
+    Build it, chunk it, load it.
+    """
+    create_index()
+    while True:
+        dump = input("path to search index dump: ")
+        if os.path.exists(dump):
+            break
+        print("File not found. Try again.")
+    chunk_gzipped_file(dump, INDEX_NAME)
+    # load_chunks()
+
+
 def main():
-    chunk_wikipedia("/Users/palisand/Desktop/enwiki-20170904-cirrussearch-content.json.gz")
+    setup()
+
+    # docopt
+
+    # chunk_wikipedia("/Users/palisand/Desktop/enwiki-20170904-cirrussearch-content.json.gz")
+
     # with open("fixtures.txt") as fp:
     #     for line in fp:
     #         print(get_categories_for_text(line))
