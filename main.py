@@ -8,6 +8,7 @@ Usage:
   main.py delete_index
   main.py chunk <filepath>
   main.py load [-d | --delete]
+  main.py extract <text>
   main.py (-h | --help)
 
 Options:
@@ -38,7 +39,6 @@ class MockProgressBar(object):
     Mock progressbar.ProgressBar
     (Used if progressbar2 is not installed.)
     """
-
     def __init__(self, max_value):
         self.max_value = max_value
 
@@ -52,7 +52,7 @@ class MockProgressBar(object):
 
 
 def delete_index():
-    """ Delete the index if it exits. """
+    """ Delete the index if it exists. """
     if es.indices.exists(INDEX_NAME):
         es.indices.delete(index=INDEX_NAME)
 
@@ -162,14 +162,16 @@ def load_chunks(prefix, delete=False):
 
 
 def get_categories_for_text(text):
-    return es.search(
+    result = es.search(
         index=INDEX_NAME,
         doc_type="page",
         body={
             "query": {
                 "more_like_this": {
                     "fields": [
-                        "source_text.plain"
+                        "text"
+                        # "source_text.trigram"
+                        # "source_text.plain"
                     ],
                     "like": text,
                     "min_term_freq": 1,
@@ -178,10 +180,18 @@ def get_categories_for_text(text):
                 }
             }
         },
-        _source="title",
-        # _source="categories"  # try list
-        # filter_path=["hits.hits._source"]
+        size=5,
+        _source=["title", "category"],
+        filter_path=["hits.hits._source", "hits.hits._score"]
     )
+
+    # print(json.dumps(result, indent=2))
+
+    for i, hit in enumerate(result["hits"]["hits"]):
+        source = hit["_source"]
+        print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
+        for category in source["category"]:
+            print("   -", category)
 
 
 def setup():
@@ -209,12 +219,7 @@ def main(argv):
         doc["delete_index"] and delete_index()
         doc["chunk"] and chunk_gzipped_file(doc["<filepath>"], INDEX_NAME)
         doc["load"] and load_chunks(INDEX_NAME, doc["--delete"])
-
-    # print(get_categories_for_text("Tamas is a Field Marshal"))  # matches "The Crimson Campaign"
-
-    # with open("fixtures.txt") as fp:
-    #     for line in fp:
-    #         print(get_categories_for_text(line))
+        doc["extract"] and get_categories_for_text(doc["<text>"])
 
 
 if __name__ == "__main__":

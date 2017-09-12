@@ -46,3 +46,5 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-
 ./main.py chunk /path/to/dump
 ./main.py load
 ```
+
+4. Test category extraction with `./main.py extract "Some text"`.
