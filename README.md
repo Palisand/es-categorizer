@@ -48,3 +48,48 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-
 ```
 
 4. Test category extraction with `./main.py extract "Some text"`.
+
+Sample output:
+```
+1) 16.117481 "United Bowl (IFL)"
+   - United Bowl
+   - Recurring events established in 2009
+   - Indoor American football competitions
+   - American football bowls
+2) 15.926816 "English Sculling Championship"
+   - Sport in England
+   - History of rowing
+   - Rowing in England
+   - National championships in England
+3) 15.925265 "Interlining"
+   - Articles with limited geographic scope from December 2010
+   - USA-centric
+   - Civil aviation
+   - Scheduling (transportation)
+   - Transport operations
+4) 15.651912 "Lufthansa CityLine Flight 5634"
+   - Use dmy dates from June 2017
+   - Articles needing additional references from February 2011
+   - All articles needing additional references
+   - Articles with French-language external links
+   - Coordinates on Wikidata
+   - Accidents and incidents involving the Bombardier Dash 8
+   - Aviation accidents and incidents in France
+   - Aviation accidents and incidents in 1993
+   - Lufthansa CityLine accidents and incidents
+   - 1993 in France
+   - January 1993 events
+   - All stub articles
+   - Aviation accident stubs
+5) 15.323568 "Hales Trophy"
+   - Shipping awards
+```
+
+### TODO:
+
+- Get better results from `get_categories_from_text`.
+- Extract general category from result categories.
+    - Compile list of supported general categories.
+    - Ex: Final categories for `1)` in the sample output above:
+        - Sports
+        - Football
