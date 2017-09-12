@@ -11,6 +11,7 @@ Given some text, [term vectors](https://www.elastic.co/guide/en/elasticsearch/re
 
 ### Prerequisite Dependencies
 
+- python 3
 - elasticsearch 5.5.2
 - [ICU Analysis Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html)
 - [Wikimedia's Extra Queries and Filters API Extention Plugin](https://github.com/wikimedia/search-extra)
@@ -18,6 +19,7 @@ Given some text, [term vectors](https://www.elastic.co/guide/en/elasticsearch/re
 
 If you're using OS X and homebrew:
 ```bash
+brew install python3
 brew install elasticsearch
 brew services start elasticsearch  # or just "elasticsearch" for foreground execution
 elasticsearch-plugin install analysis-icu
@@ -26,6 +28,12 @@ elasticsearch-plugin install org.wikimedia.search:extra:5.5.2
 
 ### Setup
 
-TODO: finish guide
-
 1. Download the [latest dump of the search index](https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-cirrussearch-content.json.gz).
+```
+curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-cirrussearch-content.json.gz"
+```
+
+2. Install this program's dependencies: `pip install -r requirements.txt`
+  - You should probably do this in a [virtual environment](https://virtualenv.pypa.io/en/stable/)
+
+3. Run `./main.py`
