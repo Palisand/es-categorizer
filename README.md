@@ -33,7 +33,8 @@ elasticsearch-plugin install org.wikimedia.search:extra:5.5.2
 curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-cirrussearch-content.json.gz"
 ```
 
-2. Install this program's dependencies: `pip install -r requirements.txt`
-  - You should probably do this in a [virtual environment](https://virtualenv.pypa.io/en/stable/)
+2. Install this program's dependencies: `pip install -r requirements.txt`.
+    - You should probably do this in a [virtual environment](https://virtualenv.pypa.io/en/stable/).
 
-3. Run `./main.py`
+3. Run `./main.py`.
+    - You will be prompted for the path of the file you downloaded in step 1.
