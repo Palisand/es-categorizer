@@ -121,7 +121,7 @@ def chunk_gzipped_file(filepath, prefix):
         print("chunks: {}".format(num_chunk + 1))
 
 
-def load_chunks(delete=False):
+def load_chunks(prefix, delete=False):
 
     # FIXME: use bulk / parallel_bulk helper instead of subprocess if possible
     # https://stackoverflow.com/questions/46164822/elasticsearch-py-bulk-helper-equivalent-of-curl-with-file
@@ -133,7 +133,7 @@ def load_chunks(delete=False):
     #         actions=fp
     #     )
 
-    chunks = os.listdir("chunks")
+    chunks = list(filter(lambda c: c.startswith(prefix), os.listdir("chunks")))
     bar = progressbar.ProgressBar if not MOCK_PROGRESSBAR else MockProgressBar
     bar = bar(max_value=len(chunks))
 
@@ -186,7 +186,7 @@ def get_categories_for_text(text):
 
 def setup():
     """
-    Build it, chunk it, load it.
+    Wipe it, build it, chunk it, load it.
     """
     delete_index()
     create_index()
@@ -196,7 +196,7 @@ def setup():
             break
         print("File not found. Try again.")
     chunk_gzipped_file(dump, INDEX_NAME)
-    load_chunks()
+    load_chunks(INDEX_NAME)
 
 
 def main(argv):
@@ -208,7 +208,7 @@ def main(argv):
         doc["create_index"] and create_index()
         doc["delete_index"] and delete_index()
         doc["chunk"] and chunk_gzipped_file(doc["<filepath>"], INDEX_NAME)
-        doc["load"] and load_chunks(doc["--delete"])
+        doc["load"] and load_chunks(INDEX_NAME, doc["--delete"])
 
     # print(get_categories_for_text("Tamas is a Field Marshal"))  # matches "The Crimson Campaign"
 

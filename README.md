@@ -38,3 +38,11 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-
 
 3. Run `./main.py`.
     - You will be prompted for the path of the file you downloaded in step 1.
+    - If you've got limited storage, consider setting `delete` to `True` for `load_chunks()` beforehand.
+    - This is command is equivalent to:
+```
+./main.py delete_index
+./main.py create_index
+./main.py chunk /path/to/dump
+./main.py load
+```
