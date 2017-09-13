@@ -39,7 +39,7 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-
 3. Run `./main.py`.
     - You will be prompted for the path of the file you downloaded in step 1.
     - If you've got limited storage, consider setting `delete` to `True` for `load_chunks()` beforehand.
-    - This is command is equivalent to:
+    - This command is equivalent to:
 ```
 ./main.py delete_index
 ./main.py create_index
@@ -77,6 +77,7 @@ Sample output for `./main.py extract -s 3 "The Cubs are destroying the Mets righ
 ### TODO:
 
 - Get better results from `get_categories_from_text`.
+    - Adapt according to text size?
 - Extract general category from result categories.
     - Compile list of supported general categories.
     - Ex: Final categories for `1)` in the sample output above:
