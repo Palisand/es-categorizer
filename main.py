@@ -8,12 +8,13 @@ Usage:
   main.py delete_index
   main.py chunk <filepath>
   main.py load [-d | --delete]
-  main.py extract <text>
+  main.py extract [-s <int> | --size=<int>] <text>
   main.py (-h | --help)
 
 Options:
- -h --help      Show this screen.
- -d --delete    Delete chunk-files after loading them.
+ -h --help              Show this screen.
+ -d --delete            Delete chunk-files after loading them.
+ -s <int> --size=<int>  Result set size [default: 5].
 
 """
 import os
@@ -161,7 +162,7 @@ def load_chunks(prefix, delete=False):
         print("Failed to load {} chunk files.".format(num_failed_chunks))
 
 
-def get_categories_for_text(text):
+def get_categories_for_text(text, result_set_size=5):
     result = es.search(
         index=INDEX_NAME,
         doc_type="page",
@@ -175,23 +176,26 @@ def get_categories_for_text(text):
                     ],
                     "like": text,
                     "min_term_freq": 1,
-                    "max_query_terms": 20,
-                    "min_doc_freq": 1
+                    "max_query_terms": 25,
+                    "min_doc_freq": 5
                 }
             }
         },
-        size=5,
+        size=result_set_size,
         _source=["title", "category"],
         filter_path=["hits.hits._source", "hits.hits._score"]
     )
 
     # print(json.dumps(result, indent=2))
 
-    for i, hit in enumerate(result["hits"]["hits"]):
-        source = hit["_source"]
-        print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
-        for category in source["category"]:
-            print("   -", category)
+    if "hits" in result:
+        for i, hit in enumerate(result["hits"]["hits"]):
+            source = hit["_source"]
+            print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
+            for category in source["category"]:
+                print("   -", category)
+    else:
+        print("\x1b[31mNo categories found.\x1b[0m")
 
 
 def setup():
@@ -219,7 +223,7 @@ def main(argv):
         doc["delete_index"] and delete_index()
         doc["chunk"] and chunk_gzipped_file(doc["<filepath>"], INDEX_NAME)
         doc["load"] and load_chunks(INDEX_NAME, doc["--delete"])
-        doc["extract"] and get_categories_for_text(doc["<text>"])
+        doc["extract"] and get_categories_for_text(doc["<text>"], doc["--size"])
 
 
 if __name__ == "__main__":

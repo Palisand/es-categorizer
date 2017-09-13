@@ -49,40 +49,29 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-
 
 4. Test category extraction with `./main.py extract "Some text"`.
 
-Sample output:
+Sample output for `./main.py extract -s 3 "The Cubs are destroying the Mets right now."`:
 ```
-1) 16.117481 "United Bowl (IFL)"
-   - United Bowl
-   - Recurring events established in 2009
-   - Indoor American football competitions
-   - American football bowls
-2) 15.926816 "English Sculling Championship"
-   - Sport in England
-   - History of rowing
-   - Rowing in England
-   - National championships in England
-3) 15.925265 "Interlining"
-   - Articles with limited geographic scope from December 2010
-   - USA-centric
-   - Civil aviation
-   - Scheduling (transportation)
-   - Transport operations
-4) 15.651912 "Lufthansa CityLine Flight 5634"
-   - Use dmy dates from June 2017
-   - Articles needing additional references from February 2011
-   - All articles needing additional references
-   - Articles with French-language external links
-   - Coordinates on Wikidata
-   - Accidents and incidents involving the Bombardier Dash 8
-   - Aviation accidents and incidents in France
-   - Aviation accidents and incidents in 1993
-   - Lufthansa CityLine accidents and incidents
-   - 1993 in France
-   - January 1993 events
-   - All stub articles
-   - Aviation accident stubs
-5) 15.323568 "Hales Trophy"
-   - Shipping awards
+1) 21.56842 "1969 Chicago Cubs season"
+   - Use mdy dates from November 2013
+   - Articles with hCards
+   - Chicago Cubs seasons
+   - 1969 Major League Baseball season
+2) 21.366503 "2015 Chicago Cubs season"
+   - Use mdy dates from August 2015
+   - Articles with hCards
+   - 2015 Major League Baseball season
+   - 2015 in sports in Illinois
+   - Chicago Cubs seasons
+3) 21.28783 "2015 National League Championship Series"
+   - Pages using deprecated image syntax
+   - 2015 Major League Baseball season
+   - National League Championship Series
+   - Chicago Cubs postseason
+   - 2015 in sports in Illinois
+   - 21st century in Chicago
+   - 2015 in sports in New York City
+   - New York Mets postseason
+   - October 2015 sports events
 ```
 
 ### TODO:
@@ -92,4 +81,4 @@ Sample output:
     - Compile list of supported general categories.
     - Ex: Final categories for `1)` in the sample output above:
         - Sports
-        - Football
+        - Baseball
