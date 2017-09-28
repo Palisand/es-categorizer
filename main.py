@@ -134,9 +134,11 @@ def load_chunks(prefix, delete=False):
     #         actions=fp
     #     )
 
+	
     chunks = list(filter(lambda c: c.startswith(prefix), os.listdir("chunks")))
     bar = progressbar.ProgressBar if not MOCK_PROGRESSBAR else MockProgressBar
     bar = bar(max_value=len(chunks))
+	
 
     num_failed_chunks = 0
     for i, chunkname in enumerate(chunks):
@@ -193,7 +195,7 @@ def get_categories_for_text(text, result_set_size=5):
             source = hit["_source"]
             print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
             for category in source["category"]:
-                print("   -", category)
+                print("   -", ascii(category))
     else:
         print("\x1b[31mNo categories found.\x1b[0m")
 
