@@ -134,11 +134,9 @@ def load_chunks(prefix, delete=False):
     #         actions=fp
     #     )
 
-	
     chunks = list(filter(lambda c: c.startswith(prefix), os.listdir("chunks")))
     bar = progressbar.ProgressBar if not MOCK_PROGRESSBAR else MockProgressBar
     bar = bar(max_value=len(chunks))
-	
 
     num_failed_chunks = 0
     for i, chunkname in enumerate(chunks):
