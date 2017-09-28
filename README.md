@@ -28,9 +28,10 @@ elasticsearch-plugin install org.wikimedia.search:extra:5.5.2
 
 ### Setup
 
-1. Download the [latest dump of the search index](https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-cirrussearch-content.json.gz).
+1. Download the [latest dump of the search index](https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170925-cirrussearch-content.json.gz).
 ```
-curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170904-cirrussearch-content.json.gz"
+curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170925-cirrussearch-content.json.gz"
+# If the URL is invalid, go to https://dumps.wikimedia.org/other/cirrussearch/current/ to find an alternative
 ```
 
 2. Install this program's dependencies: `pip install -r requirements.txt`.

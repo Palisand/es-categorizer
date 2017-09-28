@@ -193,7 +193,7 @@ def get_categories_for_text(text, result_set_size=5):
             source = hit["_source"]
             print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
             for category in source["category"]:
-                print("   -", category)
+                print("   -", ascii(category))
     else:
         print("\x1b[31mNo categories found.\x1b[0m")
 
