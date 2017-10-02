@@ -1,13 +1,19 @@
 # es-categorizer 
 Extracting categories from an arbitrary block of text using Elasticsearch and Wikipedia.
 
+### TODO:
+
+- Get better wiki article results.
+    - Adapt according to text size?
+
 ### How?
 
 Given some text, [term vectors](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-termvectors.html) and the [OpenNLP Ingest Processor plugin](https://github.com/spinscale/elasticsearch-ingest-opennlp) can be used to extract keywords that exist **only** within that text, which is not suitable for category extraction. What is needed is a dataset that includes indexable content paired with tags, like an encyclopedia:
 
 1. Index Wikipedia. See [this guide](https://www.elastic.co/blog/loading-wikipedia) and *Setup* below.
 2. Use a [More Like This Query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html) to find documents (wiki articles) that match a given text.
-3. Return the categories of the highest scoring documents.
+3. Gather the wiki categories of the highest scoring documents.
+4. Return a general category based on those categories.
 
 ### Prerequisite Dependencies
 
@@ -48,7 +54,7 @@ curl -O "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20170925-
 ./main.py load
 ```
 
-4. Test category extraction with `./main.py extract "Some text"`.
+4. Test wiki category extraction with `./main.py extract "Some text"`.
 
 Sample output for `./main.py extract -s 3 "The Cubs are destroying the Mets right now."`:
 ```
@@ -74,13 +80,8 @@ Sample output for `./main.py extract -s 3 "The Cubs are destroying the Mets righ
    - New York Mets postseason
    - October 2015 sports events
 ```
+> NOTE: Results may differ between search index versions.
 
-### TODO:
+5. Test general category extraction with `categorize`.
 
-- Get better results from `get_categories_from_text`.
-    - Adapt according to text size?
-- Extract general category from result categories.
-    - Compile list of supported general categories.
-    - Ex: Final categories for `1)` in the sample output above:
-        - Sports
-        - Baseball
+`./main.py categorize "The Cubs are destroying the Mets right now."` should yield `sports`.
