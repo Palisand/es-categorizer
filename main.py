@@ -270,5 +270,6 @@ def main(argv):
         doc["extract"] and get_categories_for_text(doc["<text>"], doc["--size"])
         doc["categorize"] and map_category(doc["<text>"])
 
+
 if __name__ == "__main__":
     main(sys.argv)
