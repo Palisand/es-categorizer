@@ -9,6 +9,7 @@ Usage:
   main.py chunk <filepath>
   main.py load [-d | --delete]
   main.py extract [-s <int> | --size=<int>] <text>
+  main.py categorize <text>
   main.py (-h | --help)
 
 Options:
@@ -32,7 +33,14 @@ except ImportError:
     MOCK_PROGRESSBAR = True
 
 es = Elasticsearch()
+
+CATEGORY_DEFAULT = 'news'
+CATEGORY_FILE = 'category.json'
+CATEGORY_MIN_SCORE = 3
 INDEX_NAME = "enwiki"
+MIN_DOC_FREQ = 5
+MIN_TERM_FREQ = 1
+MAX_QUERY_TERMS = 25
 
 
 class MockProgressBar(object):
@@ -162,8 +170,8 @@ def load_chunks(prefix, delete=False):
         print("Failed to load {} chunk files.".format(num_failed_chunks))
 
 
-def get_categories_for_text(text, result_set_size=5):
-    result = es.search(
+def search_text(text, result_set_size=5):
+    return es.search(
         index=INDEX_NAME,
         doc_type="page",
         body={
@@ -175,9 +183,9 @@ def get_categories_for_text(text, result_set_size=5):
                         # "source_text.plain"
                     ],
                     "like": text,
-                    "min_term_freq": 1,
-                    "max_query_terms": 25,
-                    "min_doc_freq": 5
+                    "max_query_terms": MAX_QUERY_TERMS,
+                    "min_doc_freq": MIN_DOC_FREQ,
+                    "min_term_freq": MIN_TERM_FREQ
                 }
             }
         },
@@ -185,6 +193,10 @@ def get_categories_for_text(text, result_set_size=5):
         _source=["title", "category"],
         filter_path=["hits.hits._source", "hits.hits._score"]
     )
+
+
+def get_categories_for_text(text, result_set_size=5):
+    result = search_text(text, result_set_size)
 
     # print(json.dumps(result, indent=2))
 
@@ -196,6 +208,34 @@ def get_categories_for_text(text, result_set_size=5):
                 print("   -", ascii(category))
     else:
         print("\x1b[31mNo categories found.\x1b[0m")
+
+
+def map_category(text, result_set_size=10):
+    categories_json = json.load(open(CATEGORY_FILE))
+    wiki_results = search_text(text, result_set_size)
+
+    wiki_pages = []
+    if 'hits' in wiki_results:
+        for hit in wiki_results['hits']['hits']:
+            source = hit['_source']
+            wiki_pages.append(source["title"])
+            for category in source['category']:
+                wiki_pages.append(category)
+
+    scoring = {category: 0 for category in categories_json.keys()}
+    for wiki_page in wiki_pages:
+        for category, subcategories in categories_json.items():
+            for subcategory in subcategories:
+                if subcategory in wiki_page:
+                    scoring[category] += 1
+
+    mapped_category = max(scoring, key=(lambda key: scoring[key]))
+    mapped_score = scoring[mapped_category]
+
+    if mapped_score < CATEGORY_MIN_SCORE:
+        print(CATEGORY_DEFAULT)
+    else:
+        print(mapped_category)
 
 
 def setup():
@@ -224,7 +264,7 @@ def main(argv):
         doc["chunk"] and chunk_gzipped_file(doc["<filepath>"], INDEX_NAME)
         doc["load"] and load_chunks(INDEX_NAME, doc["--delete"])
         doc["extract"] and get_categories_for_text(doc["<text>"], doc["--size"])
-
+        doc["categorize"] and map_category(doc["<text>"])
 
 if __name__ == "__main__":
     main(sys.argv)
