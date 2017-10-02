@@ -9,6 +9,7 @@ Usage:
   main.py chunk <filepath>
   main.py load [-d | --delete]
   main.py extract [-s <int> | --size=<int>] <text>
+  main.py categorize <text>
   main.py (-h | --help)
 
 Options:
@@ -17,13 +18,15 @@ Options:
  -s <int> --size=<int>  Result set size [default: 5].
 
 """
-import os
-import sys
 import gzip
 import json
+import os
 import subprocess
+import sys
+
 from docopt import docopt
 from elasticsearch import Elasticsearch
+
 # from elasticsearch.helpers import bulk
 try:
     import progressbar
@@ -32,7 +35,14 @@ except ImportError:
     MOCK_PROGRESSBAR = True
 
 es = Elasticsearch()
+
+CATEGORY_DEFAULT = "news"
+CATEGORY_FILE = "category.json"
+CATEGORY_MIN_SCORE = 10
 INDEX_NAME = "enwiki"
+MIN_DOC_FREQ = 5
+MIN_TERM_FREQ = 1
+MAX_QUERY_TERMS = 25
 
 
 class MockProgressBar(object):
@@ -44,12 +54,12 @@ class MockProgressBar(object):
         self.max_value = max_value
 
     def update(self, num):
-        print('{:.0f}% ({} of {})'.format(
+        print("{:.0f}% ({} of {})".format(
             (num / self.max_value) * 100, num, self.max_value))
-        print("\x1b[1A\x1b[2K", end='')
+        print("\x1b[1A\x1b[2K", end="")
 
     def finish(self):
-        print('100% ({0} of {0})'.format(self.max_value))
+        print("100% ({0} of {0})".format(self.max_value))
 
 
 def delete_index():
@@ -117,7 +127,7 @@ def chunk_gzipped_file(filepath, prefix):
                 else:
                     break
             print("chunks: {}".format(num_chunk + 1))
-            print("\x1b[1A\x1b[2K", end='')
+            print("\x1b[1A\x1b[2K", end="")
             num_chunk += 1
         print("chunks: {}".format(num_chunk + 1))
 
@@ -162,8 +172,8 @@ def load_chunks(prefix, delete=False):
         print("Failed to load {} chunk files.".format(num_failed_chunks))
 
 
-def get_categories_for_text(text, result_set_size=5):
-    result = es.search(
+def search_text(text, result_set_size=5):
+    return es.search(
         index=INDEX_NAME,
         doc_type="page",
         body={
@@ -175,9 +185,9 @@ def get_categories_for_text(text, result_set_size=5):
                         # "source_text.plain"
                     ],
                     "like": text,
-                    "min_term_freq": 1,
-                    "max_query_terms": 25,
-                    "min_doc_freq": 5
+                    "max_query_terms": MAX_QUERY_TERMS,
+                    "min_doc_freq": MIN_DOC_FREQ,
+                    "min_term_freq": MIN_TERM_FREQ
                 }
             }
         },
@@ -186,16 +196,50 @@ def get_categories_for_text(text, result_set_size=5):
         filter_path=["hits.hits._source", "hits.hits._score"]
     )
 
+
+def get_categories_for_text(text, result_set_size=5):
+    result = search_text(text, result_set_size)
+
     # print(json.dumps(result, indent=2))
 
     if "hits" in result:
         for i, hit in enumerate(result["hits"]["hits"]):
             source = hit["_source"]
-            print('\x1b[1m{}) {} "{}"\x1b[0m'.format(i + 1, hit["_score"], source["title"]))
+            print("\x1b[1m{}) {} '{}'\x1b[0m".format(i + 1, hit["_score"], source["title"]))
             for category in source["category"]:
                 print("   -", ascii(category))
     else:
         print("\x1b[31mNo categories found.\x1b[0m")
+
+
+def get_wiki_pages(wiki_results):
+    wiki_pages = []
+    if "hits" in wiki_results:
+        for hit in wiki_results["hits"]["hits"]:
+            source = hit["_source"]
+            wiki_pages.append(source["title"])
+            for category in source["category"]:
+                wiki_pages.append(category)
+    return wiki_pages
+
+
+def map_category(text, result_set_size=10):
+    categories_json = json.load(open(CATEGORY_FILE))
+    wiki_pages = get_wiki_pages(search_text(text, result_set_size))
+    wiki_pages.append(text)
+
+    scoring = {category: 0 for category in categories_json.keys()}
+    for wiki_page in wiki_pages:
+        for category, subcategories in categories_json.items():
+            scoring[category] += sum(subcat in wiki_page.lower() for subcat in subcategories)
+
+    mapped_category = max(scoring, key=(lambda key: scoring[key]))
+    mapped_score = scoring[mapped_category]
+
+    if mapped_score < CATEGORY_MIN_SCORE:
+        print(CATEGORY_DEFAULT)
+    else:
+        print(mapped_category)
 
 
 def setup():
@@ -224,6 +268,7 @@ def main(argv):
         doc["chunk"] and chunk_gzipped_file(doc["<filepath>"], INDEX_NAME)
         doc["load"] and load_chunks(INDEX_NAME, doc["--delete"])
         doc["extract"] and get_categories_for_text(doc["<text>"], doc["--size"])
+        doc["categorize"] and map_category(doc["<text>"])
 
 
 if __name__ == "__main__":
